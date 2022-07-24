@@ -1,0 +1,5 @@
+## at the time of writting (23-07-2022), this collection 
+## doesn't support the new Docker compose written in Go
+#collections:
+#- name: community.docker
+

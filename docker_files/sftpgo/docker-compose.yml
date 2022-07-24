@@ -1,0 +1,18 @@
+version: '3.7'
+
+services:
+  sftpgo:
+    container_name: sftpgo
+    image: drakkan/sftpgo:edge-alpine-slim
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./sftpgo_data
+        target: /srv/sftpgo
+      - type: bind
+        source: ./sftpgo_home
+        target: /var/lib/sftpgo
+    ports:
+      - 8080:8080
+      - 2022:2022
+

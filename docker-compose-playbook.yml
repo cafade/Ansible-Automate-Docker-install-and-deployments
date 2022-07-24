@@ -1,0 +1,74 @@
+- name: install-docker-playbook
+  hosts: all
+  become: yes
+  become_user: "{{ admin_user }}"
+  vars_files:
+    - "vars/default.yml"
+
+  tasks:
+    - name: Create Docker configuration directory
+      file:
+        path: "{{ docker_compose_dest_dir }}"
+        owner: "{{ admin_user }}"
+        group: "{{ admin_user }}"
+        mode: "0755"
+        state: directory
+
+    - name: Copy docker-compose templates to Ansible hosts
+      template:
+        src: docker_files/sftpgo/docker-compose.yml
+        dest: "{{ docker_compose_dest_dir }}/docker-compose.yml"
+        mode: 0600
+
+    - name: Create required directories for docker-compose template
+      file:
+        path: "{{ docker_compose_dest_dir }}/sftpgo_data"
+        owner: "{{ admin_user }}"
+        group: "{{ admin_user }}"
+        mode: "0755"
+        state: directory
+
+    - name: Create required directories for docker-compose template
+      file:
+        path: "{{ docker_compose_dest_dir }}/sftpgo_home"
+        owner: "{{ admin_user }}"
+        group: "{{ admin_user }}"
+        mode: "0755"
+        state: directory
+
+    - name: Make sure that Docker service is up
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Wait until Docker service is running
+      service_facts:
+      register: docker_service_status
+      until: docker_service_status.ansible_facts.services['docker'].state == 'running'
+      retries: 20
+      delay: 2
+
+    - name: Create and start Docker containers
+      command:
+        chdir: "{{ docker_compose_dest_dir }}"
+        cmd: docker-compose up -d
+      register: output
+
+    - ansible.builtin.debug:
+        var: output
+
+#    - name: Tear down existing Docker services
+#      community.docker.docker_compose:
+#        debug: yes
+#        project_src: "{{ docker_compose_dest_dir }}"
+#        state: absent
+#
+#    - name: Create and start Docker containers
+#      community.docker.docker_compose:
+#        project_src: "{{ docker_compose_dest_dir }}"
+#      register: output
+#
+#    - ansible.builtin.debug:
+#        var: output
+

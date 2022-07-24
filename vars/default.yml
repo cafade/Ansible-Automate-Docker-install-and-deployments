@@ -1,0 +1,20 @@
+admin_user: vagrant
+install_docker: false
+dependencies:
+  - "jq"
+  - "apt-transport-https"
+  - "ca-certificates"
+  - "curl"
+  - "gnupg-agent"
+  - "software-properties-common"
+  - "python3-pip"
+  - "python3-setuptools"
+docker_gpg_url: https://download.docker.com/linux/debian/gpg
+docker_repo: deb https://download.docker.com/linux/debian bullseye stable
+docker_packages:
+  - "docker-ce"
+  - "docker-ce-cli"
+  - "containerd.io"
+docker_compose_file_name: "docker-compose-Linux-x86_64"
+docker_compose_dest_dir: "$HOME/.docker_config"
+

@@ -1,0 +1,74 @@
+- name: install-docker-playbook
+  hosts: all
+  become: yes
+  become_user: root
+  vars_files:
+    - "vars/default.yml"
+
+  tasks:
+    #    - debug: 
+    #        msg: "Playbook started correctly"
+    - name: install dependencies
+      apt: 
+        name={{ dependencies }}
+        state=latest
+        update_cache=yes
+    - name: Add Docker GPG key
+      apt_key:
+        url: "{{ docker_gpg_url }}"
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "{{ docker_repo }}"
+        state: present
+
+    - name: Install Docker packages
+      apt: 
+        name={{ docker_packages }}
+        state=latest
+        update_cache=yes
+
+    - name: Install Python Docker module
+      pip:
+        name: docker
+
+    - name: Add adminstrator to docker group
+      user:
+        name: "{{ admin_user }}"
+        groups: docker
+        append: yes
+
+    - name: Enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    ## Docker compose tasks
+    - name: Get Docker compose latest tag
+      shell: 'curl -s "https://api.github.com/repos/docker/compose/releases/latest" | jq -r ".. .tag_name? // empty"'
+      register: docker_compose_tag
+      run_once: true
+
+    - set_fact:
+        var_docker_compose_tag: "{{ docker_compose_tag.stdout }}"
+
+    - set_fact:
+        var_docker_compose_url: "https://github.com/docker/compose/releases/download/{{ var_docker_compose_tag }}/{{ docker_compose_file_name }}"
+
+    - name: Install Docker Compose
+      get_url:
+        url: "{{ var_docker_compose_url }}"
+        dest: /usr/local/bin/docker-compose
+        mode: u+x,g+x,o+x
+
+#    - name: Pause for a while to wait for the service to fully go up
+#      pause:
+#        minutes: 2
+
+  handlers:
+    - name: Restart docker service
+      service: 
+        name: docker 
+        state: restarted

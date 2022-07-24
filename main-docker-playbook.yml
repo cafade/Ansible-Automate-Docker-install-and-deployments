@@ -1,0 +1,18 @@
+- name: Main Docker playbook
+  hosts: all
+  become: yes
+  become_user: root
+  vars_files:
+    - "vars/default.yml"
+
+  tasks:
+   - set_fact:
+        var_install_docker: '{{ install_docker }}'
+
+- name: Run install-docker-playbook
+  import_playbook: install-docker-playbook.yml
+  when: var_install_docker
+
+- name: Run docker-compose-playbook.yml
+  import_playbook: docker-compose-playbook.yml
+
